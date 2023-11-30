@@ -1,16 +1,20 @@
-# 1. Utwórz przestrzeń nazw o nazwie lab4, w której można uruchomić 5 Podów i dostępna jest całkowita ilość 1000 millicore i 1 GiB RAM 
+# 1. Należy uruchomić serwer WWW o nazwie lab8server w przestrzeni nazw restricted, używając obraz nginx oraz utworzyć dla niego Service typu ClusterIP.
+Plik **nginx_deployment.yaml** zawiera deklaracje serwera WWW w przestrzeni nazw restricted wraz z serwisem typu clusterIP. Poniżej przedstawiam polecenia.
 ```
-kubectl create namespace lab4
-kubectl create quota lab4-quota --namespace=lab4 --hard=limits.cpu=1000m,limits.memory=1Gi,pods=5
+kubectl create namespace restricted # Tworzenie przestrzeni nazw 'restricted'
+kubectl apply -f nginx_deployment.yaml # Tworzenie serwera WWW poprzez gotowy plik yaml
+```
+# 2. W domyślnej przestrzeni nazw należy uruchomić dwa Pod-y: Sleepybox1 i Sleepybox2, każdy oparty na obrazie busybox i wykonujący przy polecenie: sleep 3600
+Wykorzystałem plik **sleepybox_deployment.yaml** do utworzenia dwóch podów, gdzie Sleepybox1 ma również ustawiony label app:sleepybox1.
+```
+kubectl apply -f sleepybox_deployment.yaml # Tworzenie dwóch podów
+```
+# 3. Należy utworzyć NetworkPolicy, który ogranicza ruch przychodzący do przestrzeni nazw restricted w taki sposób, że dostęp do lab8server ma tylko pod Sleepybox1 z domyślnej przestrzeni nazw a każdy inny dostęp do przestrzeni restricted jest zabroniony
+Stworzyłem plik **network_policy.yaml**, który definiuje ruch przychodzący (ingress) w przestrzeni nazw z labelem default oraz określa, których podów to dotyczy (podSelector - matchLabel). Więc efekt powinien być taki, że pod z przestrzeni default z labelem sleepybox1 powinien móc dostać się do servera WWW, natomiast inne pody z tej przestrzeni nie będą mogły się dostać bez odpowiedniego labela.
+```
+kubectl apply -f network-policy.yaml
 ```
 
-# 2. Uruchom Deployment o nazwie restrictednginx w przestrzeni nazw lab4 z 3 pod-ami gdzie każdy Pod początkowo żąda: 64 MiB RAM oraz 125m CPU , a górny limit zasobów to 256 MiB RAM oraz 250m CPU. 
-```
-kubectl create deploy restrictednginx --image=nginx -n lab4 --replicas=3
-kubectl set resources deployment restrictednginx -n lab4 --limits=cpu=250m,memory=256Mi --requests=cpu=125m,memory=64Mi
-```
-# 3. Potwierdź poprawność uruchomienia tych pod-ów za pomocą wybranych samodzielnie poleceń.
-```
-kubectl describe deployment restrictednginx -n lab4
-```
-![lab4_chmury](https://github.com/Smoofky/Kubernetes/assets/141446663/ee5b8709-64f6-4cb1-a950-651a32f1e989)
+# Weryfikacja
+
+![chmury](https://github.com/Smoofky/Kubernetes/assets/141446663/b1bca9ce-a22a-452c-8a6a-ac85eff351d4)
