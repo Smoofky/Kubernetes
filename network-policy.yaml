@@ -4,9 +4,6 @@ metadata:
   name: lab8server-access
   namespace: restricted
 spec:   
-  podSelector:
-    matchLabels:
-      app: lab8server
   ingress:
   - from:
     - namespaceSelector:
